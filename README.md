@@ -7,7 +7,7 @@ Once this is done these streams need to be splitted into individual videos for e
 
 This [Node.js](https://www.nodejs.org) CLI automates this process.
 
-Basically the application :
+Basically the application:
 
 - downloads the stream for each room
 - splits them into invidual video for each talk, according to timestamps given
@@ -17,7 +17,9 @@ Basically the application :
 
 ## Install
 
-First you'll need two runtime requirements :
+If you plan to use Docker just run `./build.sh` to build the image.
+
+First you'll need two runtime requirements (unless you want to use Docker, see below):
 
   1. [youtube-dl](https://rg3.github.io/youtube-dl/), used to download rooms streams
   2. [ffpmeg](https://ffmpeg.org/) v3.4+, used to extract talks from streams
@@ -31,13 +33,13 @@ Go to the [Google developers console](https://console.developers.google.com/), s
 Then select `Node.js` as OAuth 2.0 client and copy/paste the `client_id` and `client_secret` into `config/default.json`.  
 If you need to create a new application don't forget to enable the "YouTube Data API v3" API for it.
 
-The second step is to export the CSV file containing all the talks informations :
+The second step is to export the CSV file containing all the talks informations:
   
   1. Go to the Google Drive account and open the spreadsheet `Talks <YEAR>` located in the folder `6- CFP - Speakers`
   2. Export the sheet named `Vidéos`
   3. Paste the CSV file at the root of the projet, it should be named `Talks <ANNEE>.csv`
 
-Check that this sheet contains :
+Check that this sheet contains:
 
   - room in column `A`
   - id in column `C`
@@ -51,7 +53,11 @@ Put the intro and outro files to be added to each video into the [assets](./asse
 
 Finally create a configuration file called `production.json` in the `config` directory, using `default.json` as template (see `Configuration` section below for more information).
 
-You can now run `NODE_ENV=production yarn start` to start the processing.  
+You can use Docker to run the application, using `run.sh` script.
+
+_Notice that you'll need to manually copy paste the OAuth authorization URL to give access to your YouTube account_
+
+You can run the application locally, using `NODE_ENV=production yarn start` to start the processing.  
 Upon start the application should ask for access to the Google account, make sure that you select the BDX I/O account, not your own Google account (unless you want to make some tests).
 
 **Note**
@@ -82,8 +88,6 @@ Here is the list of the existing configuration parameters :
     "rooms": ["AmphiA", "AmphiB"],
     // CFP base URL for talks, used to retrieve additional infos for talks.
     "cfpBaseUrlTalk": "<URL>",
-    // Use Docker or not for download and extract stream.
-    "useDocker": true/false,
     // Download or not the full stream video.
     "download": true/false,
     // Extract talks from stream video file if set to true.
