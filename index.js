@@ -66,19 +66,16 @@ const csvPath =
     : `Talks ${conferenceYear} - Vidéos.csv`;
 
 // Whether we should download or not the streams.
-const useDocker = config.has("useDocker") ? config.get("useDocker") : false;
-
-// Whether we should download or not the streams.
 const download = config.has("download") ? config.get("download") : false;
 
 // Turns on or off extraction of talks from the downloaded streams.
 const extract = config.has("extract") ? config.get("extract") : false;
 
 const intro = config.has("intro")
-  ? `${useDocker ? "/src" : __dirname}/${config.get("intro")}`
+  ? `${__dirname}/${config.get("intro")}`
   : undefined;
 const outro = config.has("outro")
-  ? `${useDocker ? "/src" : __dirname}/${config.get("outro")}`
+  ? `${__dirname}/${config.get("outro")}`
   : undefined;
 
 // Title template to apply to uploaded videos.
@@ -224,6 +221,9 @@ const authenticate = async () => {
       access_type: "offline",
       scope: YOUTUBE_SCOPES
     });
+    console.log(
+      `Open manually the following link in your browser to allow access to your YouTube account:\n${authorizeUrl}`
+    );
     const server = http
       .createServer(async (req, res) => {
         try {
@@ -274,17 +274,10 @@ const splitRoom = (talks, roomName) => {
  * @param {String} url The URL of the stream for the room.
  */
 const downloadStream = (roomName, url, directory) => {
-  let video = `${directory}/${roomName}.mp4`;
-  if (useDocker) video = `/src/videos/${roomName}/${roomName}.mp4`;
+  const video = `${directory}/${roomName}.mp4`;
   if (download) {
     console.log(`Downloading ${url} to ${video}...`);
-    if (useDocker) {
-      execSync(
-        `docker run --rm -v "${__dirname}:/src" jbergknoff/youtube-dl -o ${video} ${url}`
-      );
-    } else {
-      spawnSync("youtube-dl", [url, "--output", video]);
-    }
+    spawnSync("youtube-dl", [url, "--output", video]);
   }
 
   return video;
@@ -303,19 +296,13 @@ const extractTalk = (stream, talk, directory) => {
   const talkDuration = talk.end.diff(talk.start, "seconds");
   // fadeOutStartTime is used when evaluating ffmpegArgsTemplate below.
   const fadeOutStartTime = talkDuration - 1;
-  const output = `${useDocker ? "/src" : directory}/${talk.id}.mp4`;
+  const output = `${directory}/${talk.id}.mp4`;
 
   if (extract) {
     // Using a template engine instead of eval would surely be much safer!
     const ffmpegArgs = eval("`" + ffmpegArgsTemplate + "`");
     console.log(`Extracting ${talk.title} from ${start} to ${end}`);
-    if (useDocker) {
-      execSync(
-        `docker run --rm -v "${__dirname}:/src" jrottenberg/ffmpeg:4.0-ubuntu  ${ffmpegArgs}`
-      );
-    } else {
-      execSync(`ffmpeg ${ffmpegArgs}`);
-    }
+    execSync(`ffmpeg ${ffmpegArgs}`);
   }
 
   return { output, ...talk };
