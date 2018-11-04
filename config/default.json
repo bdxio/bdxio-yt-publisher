@@ -1,0 +1,21 @@
+{
+    "csv": "test/test.csv",
+    "rooms": ["GdAmphi"],
+    "cfpBaseUrlTalk": "https://cfp.bdx.io/api/conferences/BdxIO2018/talks",
+    "download": false,
+    "extract": false,
+    "intro": "assets/intro.mp4",
+    "outro": "assets/outro.jpg",
+    "upload": false,
+    "title": "BDX I/O ${year} - ${title} - ${speakers}",
+    "youtube": {
+        "categoryId": "28",
+        "license": "youtube",
+        "privacyStatus": "private"
+    },
+    "credentials": {
+        "client_id": "***",
+        "client_secret": "***",
+        "redirect_uri": "http://localhost:5000/oauth2callback"
+    }
+}
