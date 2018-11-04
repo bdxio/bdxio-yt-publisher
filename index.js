@@ -66,16 +66,19 @@ const csvPath =
     : `Talks ${conferenceYear} - Vidéos.csv`;
 
 // Whether we should download or not the streams.
+const useDocker = config.has("useDocker") ? config.get("useDocker") : false;
+
+// Whether we should download or not the streams.
 const download = config.has("download") ? config.get("download") : false;
 
 // Turns on or off extraction of talks from the downloaded streams.
 const extract = config.has("extract") ? config.get("extract") : false;
 
 const intro = config.has("intro")
-  ? `${__dirname}/${config.get("intro")}`
+  ? `${useDocker ? "/src" : __dirname}/${config.get("intro")}`
   : undefined;
 const outro = config.has("outro")
-  ? `${__dirname}/${config.get("outro")}`
+  ? `${useDocker ? "/src" : __dirname}/${config.get("outro")}`
   : undefined;
 
 // Title template to apply to uploaded videos.
@@ -271,10 +274,17 @@ const splitRoom = (talks, roomName) => {
  * @param {String} url The URL of the stream for the room.
  */
 const downloadStream = (roomName, url, directory) => {
-  const video = `${directory}/${roomName}.mp4`;
+  let video = `${directory}/${roomName}.mp4`;
+  if (useDocker) video = `/src/videos/${roomName}/${roomName}.mp4`;
   if (download) {
     console.log(`Downloading ${url} to ${video}...`);
-    spawnSync("youtube-dl", [url, "--output", video]);
+    if (useDocker) {
+      execSync(
+        `docker run --rm -v "${__dirname}:/src" jbergknoff/youtube-dl -o ${video} ${url}`
+      );
+    } else {
+      spawnSync("youtube-dl", [url, "--output", video]);
+    }
   }
 
   return video;
@@ -293,13 +303,19 @@ const extractTalk = (stream, talk, directory) => {
   const talkDuration = talk.end.diff(talk.start, "seconds");
   // fadeOutStartTime is used when evaluating ffmpegArgsTemplate below.
   const fadeOutStartTime = talkDuration - 1;
-  const output = `${directory}/${talk.id}.mp4`;
+  const output = `${useDocker ? "/src" : directory}/${talk.id}.mp4`;
 
   if (extract) {
     // Using a template engine instead of eval would surely be much safer!
     const ffmpegArgs = eval("`" + ffmpegArgsTemplate + "`");
     console.log(`Extracting ${talk.title} from ${start} to ${end}`);
-    execSync(`ffmpeg ${ffmpegArgs}`);
+    if (useDocker) {
+      execSync(
+        `docker run --rm -v "${__dirname}:/src" jrottenberg/ffmpeg:4.0-ubuntu  ${ffmpegArgs}`
+      );
+    } else {
+      execSync(`ffmpeg ${ffmpegArgs}`);
+    }
   }
 
   return { output, ...talk };

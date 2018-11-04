@@ -82,6 +82,8 @@ Here is the list of the existing configuration parameters :
     "rooms": ["AmphiA", "AmphiB"],
     // CFP base URL for talks, used to retrieve additional infos for talks.
     "cfpBaseUrlTalk": "<URL>",
+    // Use Docker or not for download and extract stream.
+    "useDocker": true/false,
     // Download or not the full stream video.
     "download": true/false,
     // Extract talks from stream video file if set to true.
