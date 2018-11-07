@@ -68,6 +68,11 @@ const csvPath =
 // Whether we should download or not the streams.
 const download = config.has("download") ? config.get("download") : false;
 
+// The extension to use for the downloaded streams.
+const downloadExt = config.has("downloadExt")
+  ? config.get("downloadExt")
+  : "mkv";
+
 // Turns on or off extraction of talks from the downloaded streams.
 const extract = config.has("extract") ? config.get("extract") : false;
 
@@ -99,6 +104,9 @@ const cfpBaseUrlTalk = config.get("cfpBaseUrlTalk");
 const youtubeConfig = config.has("youtube")
   ? { ...YOUTUBE_DEFAULT_CONFIG, ...config.get("youtube") }
   : YOUTUBE_DEFAULT_CONFIG;
+
+// Arguments passed to youtube-dl.
+const youtubeDlArgs = fs.readFileSync("youtube-dl.args", "UTF-8");
 
 // Arguments passed to ffmpeg.
 const ffmpegArgsTemplate = fs.readFileSync("ffmpeg.args", "UTF-8");
@@ -274,10 +282,17 @@ const splitRoom = (talks, roomName) => {
  * @param {String} url The URL of the stream for the room.
  */
 const downloadStream = (roomName, url, directory) => {
-  const video = `${directory}/${roomName}.mp4`;
+  const video = `${directory}/${roomName}.${downloadExt}`;
   if (download) {
     console.log(`Downloading ${url} to ${video}...`);
-    spawnSync("youtube-dl", [url, "--output", video]);
+    /**
+     * If using MKV format youtube-dl has to download two streams and merge them after.
+     * We need to let youtube-dl figure out the file extension (using ext template) and praise that
+     * the user set the download extension accordingly to his youtube-dl arguments.
+     */
+    execSync(
+      `youtube-dl --output "${directory}/${roomName}.%(ext)s" ${youtubeDlArgs} ${url}`
+    );
   }
 
   return video;

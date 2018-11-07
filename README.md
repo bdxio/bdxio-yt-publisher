@@ -90,6 +90,10 @@ Here is the list of the existing configuration parameters :
     "cfpBaseUrlTalk": "<URL>",
     // Download or not the full stream video.
     "download": true/false,
+    // Extension to use for downloaded stream video files.
+    // Please be aware that it must match the arguments set to download streams using youtube-dl
+    // or otherwise there might be a mismatch between the file extension used here and the one youtube-dl used.
+    "downloadExt": "mkv",
     // Extract talks from stream video file if set to true.
     "extract": true/false,
     // Path to the file to use for the intro (relative to the current directory).
