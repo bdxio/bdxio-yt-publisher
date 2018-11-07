@@ -7,6 +7,6 @@ docker container run \
     --volume ${PWD}/config:/app/config \
     --volume ${PWD}/videos:/app/videos \
     --volume ${PWD}/ffmpeg.args:/app/ffmpeg.args \
-    --volume ${PWD}/youtube-dl.args:/app/youtube-dl.args
+    --volume ${PWD}/youtube-dl.args:/app/youtube-dl.args \
     --rm \
     bdxio/bdxio-yt-publisher:latest
