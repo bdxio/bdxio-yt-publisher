@@ -1,4 +1,3 @@
-Room,Slot,ID,Title,Offset début,Son,Ecran speaker,Offset fin,A copier dans web published data,,,,Handle twitter pour buffer,Buffer,
-GdAmphi,09:00 - 10:00,IZA-1897,Faut-il pousser mémé dans les applis ?,0h00m25s,,,0h00m54s,KHL-2567,livestream,https://www.youtube.com/watch?v=SQi6ltoohnI,Vidéo Youtube,@im_flog,Le streaming facile avec Kafka ! avec @im_flog en GdAmphi #BDXIO17,12:00 - 12:15
-GdAmphi,10:00 - 11:00,VAV-5561,"Développeurs, n'estimez plus vos tâches ! #noEstimates",0h00m55s,,,0h01m24s,KHL-2567,livestream,https://www.youtube.com/watch?v=SQi6ltoohnI,Vidéo Youtube,@im_flog,Le streaming facile avec Kafka ! avec @im_flog en GdAmphi #BDXIO17,12:00 - 12:15
-GdAmphi,11:00 - 12:00,IZP-7475,Linuxkit : le linux façon ikea,0h01m25s,,,0h01m54s,KHL-2567,livestream,https://www.youtube.com/watch?v=SQi6ltoohnI,Vidéo Youtube,@im_flog,Le streaming facile avec Kafka ! avec @im_flog en GdAmphi #BDXIO17,12:00 - 12:15
+Room,Slot,ID,Title,Offset début,Son,Ecran speaker,Offset fin,A SUPPRIMER EN 2019,A SUPPRIMER EN 2019,URL Stream YouTube,Tweet,Speaker
+GdAmphi,09:00 - 10:00,AAA-1234,The Hitchhiker's Guide to Diversity (Don't panic!),0h00m25s,,,0h00m54s,,,https://www.youtube.com/watch?v=SQi6ltoohnI,,Audrey Neveu
+GdAmphi,10:15 - 11:00,XRP-9194,Google Container Tools : développer efficacement dans un monde de conteneurs,0h00m55s,,,0h01m24s,,,https://www.youtube.com/watch?v=SQi6ltoohnI,"""Google Container Tools : développer efficacement dans un monde de conteneurs"" avec @dgageot (GdAmphi) 📹 en direct : https://www.youtube.com/watch?v=1EKBxE6H-IE #BDXIO18",

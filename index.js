@@ -178,7 +178,8 @@ const parseCsvTalk = talk => ({
   title: talk[3],
   start: parseTime(talk[4]),
   end: parseTime(talk[7]),
-  streamUrl: parseStreamUrl(talk[10])
+  streamUrl: parseStreamUrl(talk[10]),
+  speakers: talk[12]
 });
 
 /**
@@ -361,6 +362,12 @@ const uploadToYouTube = async (talk, metadata) => {
 const fetchTalkInfos = async talk => {
   console.log(`Fetching infos for talk ${talk.title}...`);
   const response = await fetch(`${cfpBaseUrlTalk}/${talk.id}`);
+
+  // Some talks don't have data on the CFP (keynotes for example)
+  if (response.status === 404) {
+    return { speakers: talk.speakers, description: talk.title, ...talk };
+  }
+
   const json = await response.json();
   const speakers = json.speakers.map(speaker => speaker.name).join(" et ");
   const { summary: description } = json;
