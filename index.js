@@ -3,7 +3,7 @@ const http = require("http");
 const querystring = require("querystring");
 const url = require("url");
 const util = require("util");
-const { execSync, spawnSync } = require("child_process");
+const { execSync } = require("child_process");
 
 const config = require("config");
 const parse = util.promisify(require("csv-parse"));
