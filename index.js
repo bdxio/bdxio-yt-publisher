@@ -365,14 +365,14 @@ const fetchTalkInfos = async talk => {
 
   // Some talks don't have data on the CFP (keynotes for example)
   if (response.status === 404) {
-    return { speakers: talk.speakers, description: talk.title, ...talk };
+    return { ...talk, description: talk.title };
   }
 
   const json = await response.json();
   const speakers = json.speakers.map(speaker => speaker.name).join(" et ");
   const { summary: description } = json;
 
-  return { speakers, description, ...talk };
+  return { ...talk, speakers, description };
 };
 
 /**
