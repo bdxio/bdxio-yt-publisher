@@ -71,7 +71,7 @@ const download = config.has("download") ? config.get("download") : false;
 // The extension to use for the downloaded streams.
 const downloadExt = config.has("downloadExt")
   ? config.get("downloadExt")
-  : "mkv";
+  : "mp4";
 
 // Turns on or off extraction of talks from the downloaded streams.
 const extract = config.has("extract") ? config.get("extract") : false;
