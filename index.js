@@ -32,6 +32,13 @@ const FFMPEG_TIME_FORMAT = "H:mm:ss";
 const DEFAULT_TITLE_TEMPLATE = "BDX I/O ${year} - ${title} - ${speakers}";
 
 /**
+ * The maximum number of characters allowed in uploaded video title.
+ * YouTube allows 100 characters and the title template should contain the variable "${title}" which has 
+ * 8 characters.
+ */
+const TITLE_NB_CHARACTERS_MAX = 108;
+
+/**
  * Authorization scopes for YouTube :
  * - youtube is used to manage account and playlist
  * - youtube.upload is used to upload videos to accounts
@@ -380,10 +387,17 @@ const fetchTalkInfos = async talk => {
  * @param {Object} talk The talk to use to generate metadata
  */
 const generateMetadata = talk => {
-  const title = titleTemplate
+  let title = titleTemplate
     .replace("${year}", conferenceYear)
-    .replace("${title}", talk.title)
     .replace("${speakers}", talk.speakers);
+
+  if (title.length + talk.title.length <= TITLE_NB_CHARACTERS_MAX) {
+    title = title.replace("${title}", talk.title);
+  } else {
+    const remainingCharacters = TITLE_NB_CHARACTERS_MAX - title.length;
+    title = title.replace("${title}", talk.title.slice(0, remainingCharacters - 1) + "…");
+  }
+
   const description = talk.description;
 
   return {
