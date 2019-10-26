@@ -6,6 +6,10 @@ const escapeHtml = s =>
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#039;");
 
+const capitalize = name =>
+  name.toLowerCase().replace(/(?:^|\s|-)\S/g, c => c.toUpperCase());
+
 module.exports = {
-  escapeHtml
+  escapeHtml,
+  capitalize
 };

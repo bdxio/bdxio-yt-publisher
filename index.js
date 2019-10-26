@@ -15,7 +15,7 @@ const _ = require("lodash");
 const fetch = require("node-fetch");
 const prettyBytes = require("pretty-bytes");
 
-const { escapeHtml } = require("./strings");
+const { escapeHtml, capitalize } = require("./strings");
 
 /**
  * The downloaded streams and splitted videos to upload are stored in the videos folder.
@@ -361,7 +361,7 @@ const fetchTalkInfos = async talk => {
   console.log(`Fetching infos for talk ${talk.title}...`);
   const response = await fetch(`${cfpBaseUrlTalk}/${talk.id}`);
   const json = await response.json();
-  const speakers = json.speakers.map(speaker => speaker.name).join(" et ");
+  const speakers = json.speakers.map(speaker => capitalize(speaker.name)).join(" et ");
   const { summary: description } = json;
 
   return { speakers, description, ...talk };
