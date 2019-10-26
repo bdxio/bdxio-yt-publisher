@@ -4,7 +4,6 @@ const querystring = require("querystring");
 const url = require("url");
 const util = require("util");
 const { execSync, spawnSync } = require("child_process");
-
 const config = require("config");
 const parse = util.promisify(require("csv-parse"));
 const moment = require("moment");
@@ -15,6 +14,8 @@ const opn = require("opn");
 const _ = require("lodash");
 const fetch = require("node-fetch");
 const prettyBytes = require("pretty-bytes");
+
+const { escapeHtml } = require("./strings");
 
 /**
  * The downloaded streams and splitted videos to upload are stored in the videos folder.
@@ -373,9 +374,9 @@ const fetchTalkInfos = async talk => {
 const generateMetadata = talk => {
   const title = titleTemplate
     .replace("${year}", conferenceYear)
-    .replace("${title}", talk.title)
+    .replace("${title}", escapeHtml(talk.title))
     .replace("${speakers}", talk.speakers);
-  const description = talk.description;
+  const description = escapeHtml(talk.description);
 
   return {
     resource: {

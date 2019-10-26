@@ -17,10 +17,12 @@
     "server-destroy": "^1.0.1"
   },
   "devDependencies": {
+    "jest": "^24.9.0",
     "prettier": "^1.14.3"
   },
   "scripts": {
     "start": "node index.js",
-    "lint": "prettier --write index.js"
+    "lint": "prettier --write *.js",
+    "test": "jest"
   }
 }
