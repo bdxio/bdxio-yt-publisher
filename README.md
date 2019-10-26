@@ -37,7 +37,7 @@ The second step is to export the CSV file containing all the talks informations:
   
   1. Go to the Google Drive account and open the spreadsheet `Talks <YEAR>` located in the folder `6- CFP - Speakers`
   2. Export the sheet named `Vidéos`
-  3. Paste the CSV file at the root of the projet, it should be named `Talks <ANNEE>.csv`
+  3. Paste the CSV file at the root of the projet, it should be named `talks.csv`
 
 Check that this sheet contains:
 
@@ -57,8 +57,8 @@ You can use Docker to run the application, using `run.sh` script.
 
 _Notice that you'll need to manually copy paste the OAuth authorization URL to give access to your YouTube account_
 
-You can run the application locally, using `NODE_ENV=production yarn start` to start the processing.  
-Upon start the application should ask for access to the Google account, make sure that you select the BDX I/O account, not your own Google account (unless you want to make some tests).
+You can also run the application locally, using `NODE_ENV=production yarn start` to start the processing.  
+Upon start the application should ask for access to your Google account, make sure that you select the account which should publish the videos, not your personal Google account (unless you want to make some tests).
 
 **Note**
 
@@ -80,9 +80,9 @@ Here is the list of the existing configuration parameters :
 ```javascript
 {
     // The CSV file to use as an input list for the talks to process.
-    "csv": "test/test.csv",
-    // The current year is used but defaultbut you can override it.
-    "year": 2017,
+    "csv": "talks.csv",
+    // The current year is used by default but you can override it.
+    "year": 2019,
     // All rooms are processed by default but you can limit the rooms to process.
     // The room names corresponds to values in the first column in the CSV file.
     "rooms": ["AmphiA", "AmphiB"],
