@@ -34,7 +34,7 @@ const DEFAULT_TITLE_TEMPLATE = "BDX I/O ${year} - ${title} - ${speakers}";
 
 /**
  * The maximum number of characters allowed in uploaded video title.
- * YouTube allows 100 characters and the title template should contain the variable "${title}" which has 
+ * YouTube allows 100 characters and the title template should contain the variable "${title}" which has
  * 8 characters.
  */
 const TITLE_NB_CHARACTERS_MAX = 108;
@@ -239,7 +239,7 @@ const authenticate = async () => {
       scope: YOUTUBE_SCOPES
     });
     console.log(
-      `Open manually the following link in your browser to allow access to your YouTube account:\n${authorizeUrl}`
+      `Open the following link in your browser to allow access to your YouTube account:\n${authorizeUrl}`
     );
     const server = http
       .createServer(async (req, res) => {
@@ -249,7 +249,7 @@ const authenticate = async () => {
             res.end("Got the token 🔓");
             server.destroy();
             const { tokens } = await oauth2.getToken(qs.code);
-            oauth2.credentials = tokens;
+            oauth2.setCredentials(tokens);
             resolve(oauth2);
           }
         } catch (e) {
@@ -377,7 +377,9 @@ const fetchTalkInfos = async talk => {
   }
 
   const json = await response.json();
-  const speakers = json.speakers.map(speaker => capitalize(speaker.name)).join(" et ");
+  const speakers = json.speakers
+    .map(speaker => capitalize(speaker.name))
+    .join(" et ");
   const { summary: description } = json;
 
   return { ...talk, speakers, description };
@@ -397,7 +399,10 @@ const generateMetadata = talk => {
     title = title.replace("${title}", escapeHtml(talk.title));
   } else {
     const remainingCharacters = TITLE_NB_CHARACTERS_MAX - title.length;
-    title = title.replace("${title}", talk.title.slice(0, remainingCharacters - 1) + "…");
+    title = title.replace(
+      "${title}",
+      talk.title.slice(0, remainingCharacters - 1) + "…"
+    );
   }
 
   const description = escapeHtml(talk.description);

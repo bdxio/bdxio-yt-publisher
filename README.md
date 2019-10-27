@@ -28,7 +28,7 @@ Then you can install dependencies using `yarn` or `npm install`.
 
 ## Usage
 
-To upload videos you'll need to retrieve `client_id` and `client_secret` of the application to authorize access to the BDX I/O YouTube account.  
+To upload videos you'll need to retrieve `client_id` and `client_secret` of the application to authorize access to your YouTube account.  
 Go to the [Google developers console](https://console.developers.google.com/), select the application `bdxio-yt-publisher` and select `Identifiants`.  
 Then select `Node.js` as OAuth 2.0 client and copy/paste the `client_id` and `client_secret` into `config/default.json`.  
 If you need to create a new application don't forget to enable the "YouTube Data API v3" API for it.
