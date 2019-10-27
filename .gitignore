@@ -2,7 +2,5 @@ assets/*
 !assets/README.md
 config/dev.json
 node_modules/
-videos/
-*.csv
-!test/test.csv
-
+videos/*
+!videos/README.md

@@ -5,6 +5,10 @@
   "main": "index.js",
   "author": "Benoît Giraudou",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bdxio/bdxio-yt-publisher"
+  },
   "dependencies": {
     "config": "^2.0.1",
     "csv-parse": "^3.1.3",

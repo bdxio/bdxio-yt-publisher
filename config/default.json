@@ -1,9 +1,9 @@
 {
-    "csv": "test/test.csv",
+    "csv": "talks.csv",
     "rooms": ["GdAmphi"],
     "cfpBaseUrlTalk": "https://cfp.bdx.io/api/conferences/BdxIO2018/talks",
-    "useDocker": true,
     "download": false,
+    "downloadExt": "mp4",
     "extract": false,
     "intro": "assets/intro.mp4",
     "outro": "assets/outro.jpg",
