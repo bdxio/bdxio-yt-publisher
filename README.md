@@ -24,7 +24,7 @@ Otherwise you'll need two runtime requirements :
   1. [youtube-dl](https://rg3.github.io/youtube-dl/), used to download rooms streams
   2. [ffpmeg](https://ffmpeg.org/) v3.4+, used to extract talks from streams
 
-Then you can install dependencies using `yarn` or `npm install`.
+Then you can install dependencies using `npm install` or `yarn`.
 
 ## Usage
 
