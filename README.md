@@ -140,6 +140,9 @@ Here is the list of the existing configuration parameters :
 You may also set the `ffmpeg` arguments used to extract and encode talks from the streams.  
 For this you need to edit the file [ffmpeg.args](./ffmpeg.args).
 
+If you just want to split the videos you can use the [ffmpeg-noop.args](./ffmpeg-noop.args) file which only 
+extract videos from the stream without any transformation.
+
 If you're running the application on your computer you might want to customize the encoder used in order to use 
 available hardware acceleration (this won't work if you're using a Docker container).  
 For example on macOS you may replace `libx264` by `h264_videotoolbox` to use [VideoToolbox](https://developer.apple.com/documentation/videotoolbox).
