@@ -3,7 +3,7 @@ const http = require("http");
 const querystring = require("querystring");
 const url = require("url");
 const util = require("util");
-const { execSync, spawnSync } = require("child_process");
+const { execSync } = require("child_process");
 const config = require("config");
 const parse = util.promisify(require("csv-parse"));
 const moment = require("moment");
@@ -31,6 +31,13 @@ const FFMPEG_TIME_FORMAT = "H:mm:ss";
  * Default template to apply to uploaded talks.
  */
 const DEFAULT_TITLE_TEMPLATE = "BDX I/O ${year} - ${title} - ${speakers}";
+
+/**
+ * The maximum number of characters allowed in uploaded video title.
+ * YouTube allows 100 characters and the title template should contain the variable "${title}" which has 
+ * 8 characters.
+ */
+const TITLE_NB_CHARACTERS_MAX = 108;
 
 /**
  * Authorization scopes for YouTube :
@@ -67,19 +74,21 @@ const csvPath =
     : `Talks ${conferenceYear} - Vidéos.csv`;
 
 // Whether we should download or not the streams.
-const useDocker = config.has("useDocker") ? config.get("useDocker") : false;
-
-// Whether we should download or not the streams.
 const download = config.has("download") ? config.get("download") : false;
+
+// The extension to use for the downloaded streams.
+const downloadExt = config.has("downloadExt")
+  ? config.get("downloadExt")
+  : "mp4";
 
 // Turns on or off extraction of talks from the downloaded streams.
 const extract = config.has("extract") ? config.get("extract") : false;
 
 const intro = config.has("intro")
-  ? `${useDocker ? "/src" : __dirname}/${config.get("intro")}`
+  ? `${__dirname}/${config.get("intro")}`
   : undefined;
 const outro = config.has("outro")
-  ? `${useDocker ? "/src" : __dirname}/${config.get("outro")}`
+  ? `${__dirname}/${config.get("outro")}`
   : undefined;
 
 // Title template to apply to uploaded videos.
@@ -103,6 +112,9 @@ const cfpBaseUrlTalk = config.get("cfpBaseUrlTalk");
 const youtubeConfig = config.has("youtube")
   ? { ...YOUTUBE_DEFAULT_CONFIG, ...config.get("youtube") }
   : YOUTUBE_DEFAULT_CONFIG;
+
+// Arguments passed to youtube-dl.
+const youtubeDlArgs = fs.readFileSync("youtube-dl.args", "UTF-8");
 
 // Arguments passed to ffmpeg.
 const ffmpegArgsTemplate = fs.readFileSync("ffmpeg.args", "UTF-8");
@@ -174,7 +186,8 @@ const parseCsvTalk = talk => ({
   title: talk[3],
   start: parseTime(talk[4]),
   end: parseTime(talk[7]),
-  streamUrl: parseStreamUrl(talk[10])
+  streamUrl: parseStreamUrl(talk[10]),
+  speakers: talk[12]
 });
 
 /**
@@ -225,6 +238,9 @@ const authenticate = async () => {
       access_type: "offline",
       scope: YOUTUBE_SCOPES
     });
+    console.log(
+      `Open manually the following link in your browser to allow access to your YouTube account:\n${authorizeUrl}`
+    );
     const server = http
       .createServer(async (req, res) => {
         try {
@@ -275,17 +291,17 @@ const splitRoom = (talks, roomName) => {
  * @param {String} url The URL of the stream for the room.
  */
 const downloadStream = (roomName, url, directory) => {
-  let video = `${directory}/${roomName}.mp4`;
-  if (useDocker) video = `/src/videos/${roomName}/${roomName}.mp4`;
+  const video = `${directory}/${roomName}.${downloadExt}`;
   if (download) {
     console.log(`Downloading ${url} to ${video}...`);
-    if (useDocker) {
-      execSync(
-        `docker run --rm -v "${__dirname}:/src" jbergknoff/youtube-dl -o ${video} ${url}`
-      );
-    } else {
-      spawnSync("youtube-dl", [url, "--output", video]);
-    }
+    /**
+     * If using MKV format youtube-dl has to download two streams and merge them after.
+     * We need to let youtube-dl figure out the file extension (using ext template) and praise that
+     * the user set the download extension accordingly to his youtube-dl arguments.
+     */
+    execSync(
+      `youtube-dl --output "${directory}/${roomName}.%(ext)s" ${youtubeDlArgs} ${url}`
+    );
   }
 
   return video;
@@ -304,19 +320,13 @@ const extractTalk = (stream, talk, directory) => {
   const talkDuration = talk.end.diff(talk.start, "seconds");
   // fadeOutStartTime is used when evaluating ffmpegArgsTemplate below.
   const fadeOutStartTime = talkDuration - 1;
-  const output = `${useDocker ? "/src" : directory}/${talk.id}.mp4`;
+  const output = `${directory}/${talk.id}.mp4`;
 
   if (extract) {
     // Using a template engine instead of eval would surely be much safer!
     const ffmpegArgs = eval("`" + ffmpegArgsTemplate + "`");
     console.log(`Extracting ${talk.title} from ${start} to ${end}`);
-    if (useDocker) {
-      execSync(
-        `docker run --rm -v "${__dirname}:/src" jrottenberg/ffmpeg:4.0-ubuntu  ${ffmpegArgs}`
-      );
-    } else {
-      execSync(`ffmpeg ${ffmpegArgs}`);
-    }
+    execSync(`ffmpeg ${ffmpegArgs}`);
   }
 
   return { output, ...talk };
@@ -360,11 +370,17 @@ const uploadToYouTube = async (talk, metadata) => {
 const fetchTalkInfos = async talk => {
   console.log(`Fetching infos for talk ${talk.title}...`);
   const response = await fetch(`${cfpBaseUrlTalk}/${talk.id}`);
+
+  // Some talks don't have data on the CFP (keynotes for example)
+  if (response.status === 404) {
+    return { ...talk, description: talk.title };
+  }
+
   const json = await response.json();
   const speakers = json.speakers.map(speaker => capitalize(speaker.name)).join(" et ");
   const { summary: description } = json;
 
-  return { speakers, description, ...talk };
+  return { ...talk, speakers, description };
 };
 
 /**
@@ -372,10 +388,18 @@ const fetchTalkInfos = async talk => {
  * @param {Object} talk The talk to use to generate metadata
  */
 const generateMetadata = talk => {
-  const title = titleTemplate
+  let title = titleTemplate
     .replace("${year}", conferenceYear)
     .replace("${title}", escapeHtml(talk.title))
     .replace("${speakers}", talk.speakers);
+
+  if (title.length + talk.title.length <= TITLE_NB_CHARACTERS_MAX) {
+    title = title.replace("${title}", escapeHtml(talk.title));
+  } else {
+    const remainingCharacters = TITLE_NB_CHARACTERS_MAX - title.length;
+    title = title.replace("${title}", talk.title.slice(0, remainingCharacters - 1) + "…");
+  }
+
   const description = escapeHtml(talk.description);
 
   return {
