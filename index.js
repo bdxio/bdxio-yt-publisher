@@ -343,7 +343,9 @@ const downloadCfpData = async () => {
   const response = await fetch(`${cfpUrl}/${cfpEventId}?key=${cfpApiKey}`);
 
   if (response.status !== 200) {
-    throw Error(`unable to retrieve talk information on CFP: ${response.status} - ${response.statusText}`);
+    throw Error(
+      `unable to retrieve talk information on CFP: ${response.status} - ${response.statusText}`
+    );
   }
 
   return await response.json();
@@ -443,6 +445,7 @@ const generateMetadata = talk => {
       }
     },
     part: "snippet, status",
-    media: { body: fs.createReadStream(`${talk.output}`) }
+    media: { body: fs.createReadStream(`${talk.output}`) },
+    notifySubscribers: false
   };
 };
