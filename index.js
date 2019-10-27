@@ -102,8 +102,10 @@ const upload = config.has("upload") ? config.get("upload") : false;
 // If no rooms to process are defined all rooms are processed.
 const roomsToProcess = config.has("rooms") ? config.get("rooms") : undefined;
 
-// The CFP is used to retrieve additional informations for talks (speakers and description).
-const cfpBaseUrlTalk = config.get("cfpBaseUrlTalk");
+// The CFP is used to retrieve additional information for talks (title, speakers and description).
+const cfpUrl = config.get("cfpUrl");
+const cfpEventId = config.get("cfpEventId");
+const cfpApiKey = config.get("cfpApiKey");
 
 /**
  * Various configuration parameters for YouTube.
@@ -124,6 +126,9 @@ if (!download && !extract && !upload) {
     "🤔 it looks like you don't want to do anything, are you sure?"
   );
 }
+
+// If upload is enabled data from the CFP will be loaded once in this variable.
+let cfpData;
 
 /**
  * The main function, invoked when running the script.
@@ -148,6 +153,7 @@ const main = async () => {
       const roomTalks = talksByRoom[roomName];
       const splittedVideos = splitRoom(roomTalks, roomName);
       if (upload) {
+        cfpData = await downloadCfpData();
         for (const video of splittedVideos) {
           await uploadTalk(video);
         }
@@ -310,7 +316,7 @@ const downloadStream = (roomName, url, directory) => {
 /**
  * Extract a talk from a stream, optionnally adding an intro and an outro.
  *
- * @param {String} stream The path to the stream containing the talk to extract.
+ * @param {String} stream The path to the stream containing the talk to extract (used by ffmpegArgsTemplate).
  * @param {Object} talk The talk to extract.
  * @param {String} directory The directory where to put the extracted video.
  */
@@ -330,6 +336,17 @@ const extractTalk = (stream, talk, directory) => {
   }
 
   return { output, ...talk };
+};
+
+const downloadCfpData = async () => {
+  console.log(`Downloading CFP data...`);
+  const response = await fetch(`${cfpUrl}/${cfpEventId}?key=${cfpApiKey}`);
+
+  if (response.status !== 200) {
+    throw Error(`unable to retrieve talk information on CFP: ${response.status} - ${response.statusText}`);
+  }
+
+  return await response.json();
 };
 
 /**
@@ -368,21 +385,28 @@ const uploadToYouTube = async (talk, metadata) => {
  * @param {Object} talk The talk.
  */
 const fetchTalkInfos = async talk => {
-  console.log(`Fetching infos for talk ${talk.title}...`);
-  const response = await fetch(`${cfpBaseUrlTalk}/${talk.id}`);
-
+  console.log(`Fetching infos for talk ${talk.id}...`);
+  const cfpTalk = cfpData.talks.find(t => t.id === talk.id);
   // Some talks don't have data on the CFP (keynotes for example)
-  if (response.status === 404) {
+  if (cfpTalk === undefined) {
     return { ...talk, description: talk.title };
   }
 
-  const json = await response.json();
-  const speakers = json.speakers
-    .map(speaker => capitalize(speaker.name))
+  const { title, abstract: description } = cfpTalk;
+  const speakers = cfpTalk.speakers
+    .map(findSpeaker)
+    .map(speaker => speaker.displayName)
+    .map(capitalize)
     .join(" et ");
-  const { summary: description } = json;
 
-  return { ...talk, speakers, description };
+  return { ...talk, title, speakers, description };
+};
+
+const findSpeaker = uid => {
+  const speaker = cfpData.speakers.find(s => s.uid === uid);
+  if (speaker === undefined) throw Error(`speaker with uid ${uid} not found`);
+
+  return speaker;
 };
 
 /**
@@ -392,7 +416,6 @@ const fetchTalkInfos = async talk => {
 const generateMetadata = talk => {
   let title = titleTemplate
     .replace("${year}", conferenceYear)
-    .replace("${title}", escapeHtml(talk.title))
     .replace("${speakers}", talk.speakers);
 
   if (title.length + talk.title.length <= TITLE_NB_CHARACTERS_MAX) {
@@ -405,7 +428,7 @@ const generateMetadata = talk => {
     );
   }
 
-  const description = escapeHtml(talk.description);
+  const { description } = talk;
 
   return {
     resource: {
