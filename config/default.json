@@ -3,7 +3,7 @@
     "rooms": ["GdAmphi"],
     "cfpBaseUrlTalk": "https://cfp.bdx.io/api/conferences/BdxIO2018/talks",
     "download": false,
-    "downloadExt": "mp4",
+    "downloadExt": "mkv",
     "extract": false,
     "intro": "assets/intro.mp4",
     "outro": "assets/outro.jpg",
