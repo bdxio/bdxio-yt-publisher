@@ -15,7 +15,7 @@ const _ = require("lodash");
 const fetch = require("node-fetch");
 const prettyBytes = require("pretty-bytes");
 
-const { escapeHtml } = require("./strings");
+const { escapeHtml, capitalize } = require("./strings");
 
 /**
  * The downloaded streams and splitted videos to upload are stored in the videos folder.
@@ -377,7 +377,7 @@ const fetchTalkInfos = async talk => {
   }
 
   const json = await response.json();
-  const speakers = json.speakers.map(speaker => speaker.name).join(" et ");
+  const speakers = json.speakers.map(speaker => capitalize(speaker.name)).join(" et ");
   const { summary: description } = json;
 
   return { ...talk, speakers, description };
@@ -390,6 +390,7 @@ const fetchTalkInfos = async talk => {
 const generateMetadata = talk => {
   let title = titleTemplate
     .replace("${year}", conferenceYear)
+    .replace("${title}", escapeHtml(talk.title))
     .replace("${speakers}", talk.speakers);
 
   if (title.length + talk.title.length <= TITLE_NB_CHARACTERS_MAX) {
