@@ -1,9 +1,11 @@
 {
     "csv": "talks.csv",
     "rooms": ["GdAmphi"],
-    "cfpBaseUrlTalk": "https://cfp.bdx.io/api/conferences/BdxIO2018/talks",
+    "cfpUrl": "https://conference-hall.io/api/v1/event",
+    "cfpEventId": "TODO",
+    "cfpApiKey": "TODO",
     "download": false,
-    "downloadExt": "mp4",
+    "downloadExt": "mkv",
     "extract": false,
     "intro": "assets/intro.mp4",
     "outro": "assets/outro.jpg",
@@ -15,8 +17,8 @@
         "privacyStatus": "private"
     },
     "credentials": {
-        "client_id": "***",
-        "client_secret": "***",
+        "client_id": "TODO",
+        "client_secret": "TODO",
         "redirect_uri": "http://localhost:5000/oauth2callback"
     }
 }
