@@ -24,7 +24,7 @@ Otherwise you'll need two runtime requirements :
   1. [youtube-dl](https://rg3.github.io/youtube-dl/), used to download rooms streams
   2. [ffpmeg](https://ffmpeg.org/) v3.4+, used to extract talks from streams
 
-Then you can install dependencies using `yarn` or `npm install`.
+Then you can install dependencies using `npm install` or `yarn`.
 
 ## Usage
 
@@ -86,8 +86,13 @@ Here is the list of the existing configuration parameters :
     // All rooms are processed by default but you can limit the rooms to process.
     // The room names corresponds to values in the first column in the CSV file.
     "rooms": ["AmphiA", "AmphiB"],
-    // CFP base URL for talks, used to retrieve additional infos for talks.
-    "cfpBaseUrlTalk": "<URL>",
+    // CFP URL used to retrieve additional infos for talks (Conference Hall is supported, another CFP would
+    // probably require code changes to work).
+    "cfpUrl": "<URL>",
+    // The ID of the event in Conference Hall, can be retrieved in the settings page.
+    "cfpEventId": "Conference Hall event ID",
+    // The API key to use to access Conference Hall API.
+    "cfpApiKey": "API key for Conference Hall",
     // Download or not the full stream video.
     "download": true/false,
     // Extension to use for downloaded stream video files.
@@ -134,6 +139,9 @@ Here is the list of the existing configuration parameters :
 
 You may also set the `ffmpeg` arguments used to extract and encode talks from the streams.  
 For this you need to edit the file [ffmpeg.args](./ffmpeg.args).
+
+If you just want to split the videos you can use the [ffmpeg-noop.args](./ffmpeg-noop.args) file which only 
+extract videos from the stream without any transformation.
 
 If you're running the application on your computer you might want to customize the encoder used in order to use 
 available hardware acceleration (this won't work if you're using a Docker container).  
