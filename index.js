@@ -10,7 +10,7 @@ const moment = require("moment");
 const { google } = require("googleapis");
 const youtube = google.youtube("v3");
 const destroyer = require("server-destroy");
-const opn = require("opn");
+const open = require("open");
 const _ = require("lodash");
 const fetch = require("node-fetch");
 const prettyBytes = require("pretty-bytes");
@@ -258,7 +258,7 @@ const authenticate = async () => {
         }
       })
       .listen(5000, () => {
-        opn(authorizeUrl, { wait: false }).then(cp => cp.unref());
+        open(authorizeUrl, { wait: false }).then(cp => cp.unref());
       });
     destroyer(server);
   });
