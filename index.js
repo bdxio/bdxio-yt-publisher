@@ -123,6 +123,7 @@ if (!download && !extract && !upload) {
   console.error(
     "🤔 it looks like you don't want to do anything, are you sure?"
   );
+  return;
 }
 
 /**
