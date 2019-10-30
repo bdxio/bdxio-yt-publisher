@@ -396,11 +396,12 @@ const fetchTalkInfos = async talk => {
   }
 
   const { title, abstract: description } = cfpTalk;
-  const speakers = cfpTalk.speakers
+  const joinSpeakers = cfpTalk.speakers
     .map(findSpeaker)
     .map(speaker => speaker.displayName)
     .map(capitalize)
-    .join(" et ");
+    .join(', ');
+  const speakers = replaceLast(joinSpeakers, ', ', ' et ');
 
   return { ...talk, title, speakers, description };
 };
