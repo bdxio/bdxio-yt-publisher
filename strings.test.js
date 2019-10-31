@@ -16,7 +16,7 @@ test("should capitalize speaker name", () => {
 });
 
 test("should join speakers name", () => {
-  expect(strings.replaceLast("john doe", ",", " et ")).toBe("john doe");
-  expect(strings.replaceLast("john,doe", ",", " et ")).toBe("john et doe");
-  expect(strings.replaceLast("john_mary_doe", "_", " et ")).toBe("john_mary et doe");
+  expect(strings.replaceLastComma("john doe", " et ")).toBe("john doe");
+  expect(strings.replaceLastComma("john, doe", " et ")).toBe("john et doe");
+  expect(strings.replaceLastComma("john, mary, doe", " and ")).toBe("john, mary and doe");
 });

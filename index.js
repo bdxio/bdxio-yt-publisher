@@ -401,7 +401,7 @@ const fetchTalkInfos = async talk => {
     .map(speaker => speaker.displayName)
     .map(capitalize)
     .join(', ');
-  const speakers = replaceLast(joinSpeakers, ', ', ' et ');
+  const speakers = replaceLastComma(joinSpeakers, ' et ');
 
   return { ...talk, title, speakers, description };
 };
