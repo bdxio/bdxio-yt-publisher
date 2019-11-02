@@ -59,13 +59,14 @@ const YOUTUBE_DEFAULT_CONFIG = {
 };
 
 /**
- * Read the configuration parameters from file or set default values when possible.
+ * Get the configuration value for the specified key if it exists, otherwise returns a default value.
+ * @param {String} key The configuration key for which to return the value.
+ * @param {*} defaultValue The default value to return if the key doesn't exist in the configuration.
  */
+const getConfigValue = (key, defaultValue) => config.has(key) ? config.get(key) : defaultValue;
 
-// By defaut the current year is used.
-const conferenceYear = config.has("year")
-  ? config.get("year")
-  : new Date().getFullYear();
+// Conference year, might be used to generate videos title.
+const conferenceYear = getConfigValue("year", new Date().getFullYear());
 
 // Path to the CSV file containing the list of the talks.
 const csvPath =
@@ -74,16 +75,15 @@ const csvPath =
     : `Talks ${conferenceYear} - Vidéos.csv`;
 
 // Whether we should download or not the streams.
-const download = config.has("download") ? config.get("download") : false;
+const download = getConfigValue("download", false);
 
 // The extension to use for the downloaded streams.
-const downloadExt = config.has("downloadExt")
-  ? config.get("downloadExt")
-  : "mp4";
+const downloadExt = getConfigValue("downloadExt", "mkv");
 
 // Turns on or off extraction of talks from the downloaded streams.
-const extract = config.has("extract") ? config.get("extract") : false;
+const extract = getConfigValue("extract", false);
 
+// intro and outro are used directly by ffmpeg filter template so they appear as unused in the code.
 const intro = config.has("intro")
   ? `${__dirname}/${config.get("intro")}`
   : undefined;
@@ -92,15 +92,13 @@ const outro = config.has("outro")
   : undefined;
 
 // Title template to apply to uploaded videos.
-const titleTemplate = config.has("title")
-  ? config.get("title")
-  : DEFAULT_TITLE_TEMPLATE;
+const titleTemplate = getConfigValue("title", DEFAULT_TITLE_TEMPLATE);
 
 // Allows to upload or not the extracted talks to YouTube.
-const upload = config.has("upload") ? config.get("upload") : false;
+const upload = getConfigValue("upload", false);
 
 // If no rooms to process are defined all rooms are processed.
-const roomsToProcess = config.has("rooms") ? config.get("rooms") : undefined;
+const roomsToProcess = getConfigValue("rooms");
 
 // The CFP is used to retrieve additional information for talks (title, speakers and description).
 const cfpUrl = config.get("cfpUrl");
