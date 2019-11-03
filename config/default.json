@@ -10,7 +10,9 @@
     "intro": "assets/intro.mp4",
     "outro": "assets/outro.jpg",
     "upload": false,
-    "title": "BDX I/O ${year} - ${title} - ${speakers}",
+    "tag": false,
+    "videoTitle": "BDX I/O TEST ${year} - ${title} - ${speakers}",
+    "playlistTitle": "Talks BDX I/O TEST ${year}",
     "youtube": {
         "categoryId": "28",
         "license": "youtube",

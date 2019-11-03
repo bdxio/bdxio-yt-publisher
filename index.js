@@ -28,9 +28,14 @@ const VIDEOS_PATH = `${__dirname}/videos`;
 const FFMPEG_TIME_FORMAT = "H:mm:ss";
 
 /**
- * Default template to apply to uploaded talks.
+ * Default template to apply to uploaded videos.
  */
-const DEFAULT_TITLE_TEMPLATE = "BDX I/O ${year} - ${title} - ${speakers}";
+const DEFAULT_VIDEO_TITLE_TEMPLATE = "BDX I/O ${year} - ${title} - ${speakers}";
+
+/**
+ * Default to template to use to generate the playlist title.
+ */
+const DEFAULT_PLAYLIST_TITLE_TEMPLATE = "Talks BDX I/O ${year}";
 
 /**
  * The maximum number of characters allowed in uploaded video title.
@@ -55,7 +60,7 @@ const YOUTUBE_SCOPES = [
 const YOUTUBE_DEFAULT_CONFIG = {
   categoryId: "28", // 28 is the identifier for "Science & Technology" category
   license: "youtube", // youtube is the standard YouTube license
-  privacyStatus: "private" // uploaded talks are private by default in case something goes wrong
+  privacyStatus: "private" // uploaded talks and created playlist are private by default in case something goes wrong
 };
 
 /**
@@ -63,9 +68,10 @@ const YOUTUBE_DEFAULT_CONFIG = {
  * @param {String} key The configuration key for which to return the value.
  * @param {*} defaultValue The default value to return if the key doesn't exist in the configuration.
  */
-const getConfigValue = (key, defaultValue) => config.has(key) ? config.get(key) : defaultValue;
+const getConfigValue = (key, defaultValue) =>
+  config.has(key) ? config.get(key) : defaultValue;
 
-// Conference year, might be used to generate videos title.
+// Conference year, might be used to generate videos and playlist title.
 const conferenceYear = getConfigValue("year", new Date().getFullYear());
 
 // Path to the CSV file containing the list of the talks.
@@ -92,7 +98,16 @@ const outro = config.has("outro")
   : undefined;
 
 // Title template to apply to uploaded videos.
-const titleTemplate = getConfigValue("title", DEFAULT_TITLE_TEMPLATE);
+const videoTitleTemplate = getConfigValue(
+  "videoTitle",
+  DEFAULT_VIDEO_TITLE_TEMPLATE
+);
+
+// Playlist title template used to create the playlist.
+const playlistTitleTemplate = getConfigValue(
+  "playlistTitle",
+  DEFAULT_PLAYLIST_TITLE_TEMPLATE
+);
 
 // Allows to upload or not the extracted talks to YouTube.
 const upload = getConfigValue("upload", false);
@@ -119,9 +134,19 @@ const youtubeDlArgs = fs.readFileSync("youtube-dl.args", "UTF-8");
 // Arguments passed to ffmpeg.
 const ffmpegArgsTemplate = fs.readFileSync("ffmpeg.args", "UTF-8");
 
-if (!download && !extract && !upload) {
+// Indicates whether or not tag in YouTube manually uploaded videos.
+const tag = getConfigValue("tag", false);
+
+if (!download && !extract && !upload && !tag) {
   console.error(
-    "🤔 it looks like you don't want to do anything, are you sure?"
+    "It looks like you don't want to do anything, are you sure? 🤔"
+  );
+  return;
+}
+
+if (upload && tag) {
+  console.error(
+    "You can either choose to automatically upload the videos or tag already uploaded videos but not both 😛"
   );
   return;
 }
@@ -140,7 +165,7 @@ const main = async () => {
 
     mkdir(VIDEOS_PATH);
 
-    if (upload) {
+    if (upload || tag) {
       const auth = await authenticate();
       google.options({ auth });
     }
@@ -151,10 +176,39 @@ const main = async () => {
     for (const roomName of roomNames) {
       const roomTalks = talksByRoom[roomName];
       const splittedVideos = splitRoom(roomTalks, roomName);
-      if (upload) {
+
+      if (upload || tag) {
         cfpData = await downloadCfpData();
+      }
+
+      if (upload) {
         for (const video of splittedVideos) {
           await uploadTalk(video);
+        }
+      }
+
+      if (tag) {
+        const uploadedVideos = await getUploadedVideos();
+        const playlist = await createPlaylist();
+        let position = 0;
+        for (const video of splittedVideos) {
+          // When manually uploading videos to YouTube special characters contained in the filename are 
+          // replaced by the blank character.
+          const youtubeId = video.id.replace(/[-_]/g, " ");
+          const uploadedVideo = uploadedVideos.find(
+            v => v.snippet.title === youtubeId
+          );
+          if (!uploadedVideo)
+            throw Error(
+              `unable to find uploaded video for talk ${JSON.stringify(video)}`
+            );
+
+          await tagTalk(
+            video,
+            uploadedVideo.snippet.resourceId.videoId,
+            playlist.id,
+            position++
+          );
         }
       }
     }
@@ -367,17 +421,27 @@ const uploadTalk = async talk => {
  */
 const uploadToYouTube = async (talk, metadata) => {
   const fileSize = fs.statSync(talk.output).size;
-  const result = await youtube.videos.insert(metadata, {
-    onUploadProgress: evt => {
-      const progress = (evt.bytesRead / fileSize) * 100;
-      const completion = Math.round(progress);
-      console.log(
-        `${prettyBytes(
-          evt.bytesRead
-        )} bytes uploaded (${completion}% complete).`
-      );
+  const result = await youtube.videos.insert(
+    {
+      part: "snippet, status",
+      media: { body: fs.createReadStream(`${talk.output}`) },
+      notifySubscribers: false,
+      resource: {
+        ...metadata
+      }
+    },
+    {
+      onUploadProgress: evt => {
+        const progress = (evt.bytesRead / fileSize) * 100;
+        const completion = Math.round(progress);
+        console.log(
+          `${prettyBytes(
+            evt.bytesRead
+          )} bytes uploaded (${completion}% complete).`
+        );
+      }
     }
-  });
+  );
   return result.data;
 };
 
@@ -415,7 +479,7 @@ const findSpeaker = uid => {
  * @param {Object} talk The talk to use to generate metadata
  */
 const generateMetadata = talk => {
-  let title = titleTemplate
+  let title = videoTitleTemplate
     .replace("${year}", conferenceYear)
     .replace("${speakers}", talk.speakers);
 
@@ -432,19 +496,129 @@ const generateMetadata = talk => {
   const { description } = talk;
 
   return {
+    snippet: {
+      title,
+      description,
+      categoryId: youtubeConfig.categoryId
+    },
+    status: {
+      license: youtubeConfig.license,
+      privacyStatus: youtubeConfig.privacyStatus
+    }
+  };
+};
+
+/**
+ * Create a YouTube playlist used to add all conference talks.
+ * An object of type Playlist is returned, containing amongst other data the id of the playlist.
+ */
+const createPlaylist = async () => {
+  const title = playlistTitleTemplate.replace("${year}", conferenceYear);
+  const response = await youtube.playlists.insert({
+    part: "snippet, status",
     resource: {
       snippet: {
-        title,
-        description,
-        categoryId: youtubeConfig.categoryId
+        title
       },
       status: {
         license: youtubeConfig.license,
         privacyStatus: youtubeConfig.privacyStatus
       }
-    },
-    part: "snippet, status",
-    media: { body: fs.createReadStream(`${talk.output}`) },
-    notifySubscribers: false
-  };
+    }
+  });
+
+  return response.data;
+};
+
+/**
+ * Returns the uploaded videos of the user.
+ * This is done by listing the channels of the user, the first and only one contains the id of a special playlist containing all the uploaded videos of the user.
+ * The case where the user has multiple channels is not handled as of right now.
+ */
+const getUploadedVideos = async () => {
+  const response = await youtube.channels.list({
+    part: "contentDetails",
+    mine: true
+  });
+
+  const uploadPlaylistId =
+    response.data.items[0].contentDetails.relatedPlaylists.uploads;
+
+  return await getVideosFromPlaylist(uploadPlaylistId);
+};
+
+/**
+ * Get all the videos from a given playlist.
+ * @param {String} playlistId The id of the playlist.
+ * @param {String} pageToken The token for the results page to fetch.
+ */
+const getVideosFromPlaylist = async (playlistId, pageToken = "") => {
+  const response = await youtube.playlistItems.list({
+    part: "snippet",
+    maxResults: 50,
+    playlistId,
+    pageToken
+  });
+
+  if (response.data.nextPageToken) {
+    const nextItems = await getVideosFromPlaylist(
+      playlistId,
+      response.data.nextPageToken
+    );
+    return [...response.data.items, ...nextItems];
+  }
+
+  return response.data.items;
+};
+
+/**
+ * Tags a talk by updating its metadata (title and description) and add it to a playlist.
+ * @param {Object} talk The talk to tag.
+ * @param {String} videoId The id of the uploaded video on YouTube.
+ * @param {String} playlistId The id of the playlist the video should be added to.
+ * @param {Number} position An integer giving the position of the video in the playlist.
+ */
+const tagTalk = async (talk, videoId, playlistId, position) => {
+  console.log(`Tagging talk ${talk.title}...`);
+  const talkWithInfos = await fetchTalkInfos(talk);
+  const metadata = generateMetadata(talkWithInfos);
+  await updateVideo(videoId, metadata);
+  await addVideoToPlaylist(videoId, playlistId, position);
+};
+
+/**
+ * Updates a YouTube video (basically its title, its description and its status).
+ * @param {String} videoId The id of the video to update.
+ * @param {Object} metadata The metadata to use to update the video.
+ */
+const updateVideo = async (videoId, metadata) => {
+  await youtube.videos.update({
+    part: "id, snippet, status",
+    resource: {
+      id: videoId,
+      ...metadata
+    }
+  });
+};
+
+/**
+ * Add a YouTube video to a playlist.
+ * @param {String} videoId The id of the video to add to the playlist.
+ * @param {String} playlistId The id of the playlist.
+ * @param {Number} position An integer giving the position of the video in the playlist.
+ */
+const addVideoToPlaylist = async (videoId, playlistId, position) => {
+  await youtube.playlistItems.insert({
+    part: "snippet",
+    resource: {
+      snippet: {
+        playlistId,
+        position,
+        resourceId: {
+          kind: "youtube#video",
+          videoId
+        }
+      }
+    }
+  });
 };

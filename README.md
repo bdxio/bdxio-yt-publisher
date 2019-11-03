@@ -15,6 +15,56 @@ Basically the application:
 - uploads each video to YouTube
 - adds them to an unique playlist
 
+Since January 2019 the YouTube Data API has a daily limit of 10,000 units per day 
+(see https://stackoverflow.com/questions/15568405/youtube-api-limitations/15580411#15580411).  
+An uploaded video costs 1,600 units (https://developers.google.com/youtube/v3/docs/videos/insert), 
+meaning only 6 videos can be uploaded per day.
+
+To bypass this issue another operation has been introduced, activated by setting `tag` to `true` 
+in the configuration file.
+
+In this mode you have to follow these steps :
+
+  1. downloads the stream and extract the talks using the app
+  2. **manually** upload the extracted talks to YouTube as you won't have any limit (at least not so low as 6 videos)
+  3. activate videos tagging and run again the app
+
+Basically the tag mode will :
+
+  - retrieve the uploaded videos (using a specific playlist containing all uploaded videos)
+  - create a playlist to add the videos to
+  - update the metadata of uploaded videos, setting the title, the description, the license and the privacy status
+  - add the updated video to the playlist
+
+The matching between manually uploaded videos and videos to tag is done using the name of the uploaded file, 
+which should be the id of the talk in the CFP. In YouTube the uploaded video has by defaut the name of the file as title.  
+Be aware that once a video has been tagged it will become impossible to match again the same video, 
+as the title of the video will have been updated.
+
+This mode uses way less units than the one uploading automatically the videos :
+
+  - the listing of the user channels costs 1 unit plus 2 units for the `contentDetails` part
+  - the listing of the videos of the upload playlist costs 1 unit plus 2 units for the `snippet` part. 
+    Depending of the total number of uploaded videos more than one call may be necessary as only 50 results 
+    can be returned for each call.
+  - the creation of the playlist costs 50 units plus 2 units for the `snippet` part and 2 units for the `status` part
+  - the update of each video costs 50 units as well plus 2 units for the `snippet` part and 2 units for the `status` part
+  - finally the insertion of each video in the playlist costs 50 units plus 2 units for the `snippet` part
+
+So if you have 50 videos to upload and your channel has 2,500 videos previously uploaded the app will require :
+3 units (user channels listing) + 3 units * 50 (50 calls to retrieve the 2,500 uploaded videos) + 
+52 units (playlist creation) + 54 units * 50 (50 videos to update) + 
+52 units * 50 (50 videos to add to the playlist) = **5505 units**
+
+Basically you should be more or less good as long as you don't need to tag more than 90 videos.  
+You can use this calculator to check if you're below 10,000 units : https://developers.google.com/youtube/v3/determine_quota_cost
+
+**Note** : the number of playlists created has an hard limitation, independant of the quota.  
+You cannot create more than 10 playlists once a day using the API so don't play too much with the application 😉  
+If you have this issue you can always create manually the playlist and change the code to use the hardcoded id 
+of your playlist.  
+An issue has been created to solve this by configuration.
+
 ## Install
 
 If you plan to use Docker just run `./build.sh` to build the image.
@@ -109,8 +159,12 @@ Here is the list of the existing configuration parameters :
     "outro": "<OUTRO_PATH>",
     // Upload extracted talks to YouTube if set to true.
     "upload": true/false,
+    // Tag manually uploaded videos if set to true. It should not be used with automatic uploading!
+    "tag": true/false,
     // Title for uploaded talks. ${year} will be replaced by the conference year, ${title} by the title of the talks and ${speakers} by the name of the speakers.
-    "title": "BDX I/O ${year} - ${title} - ${speakers}",
+    "videoTitle": "BDX I/O ${year} - ${title} - ${speakers}",
+    // Title template for the playlist created. It is only used in tagging mode yet.
+    "playlistTitle": "Talks BDX I/O ${year}",
     // Configuration for YouTube.
     "youtube": {
         // The category id to apply to uploaded talks.
