@@ -192,7 +192,7 @@ const main = async () => {
         const playlist = await createPlaylist();
         let position = 0;
         for (const video of splittedVideos) {
-          // When manually uploading videos to YouTube special characters contained in the filename are 
+          // When manually uploading videos to YouTube special characters contained in the filename are
           // replaced by the blank character.
           const youtubeId = video.id.replace(/[-_]/g, " ");
           const uploadedVideo = uploadedVideos.find(
@@ -484,7 +484,7 @@ const generateMetadata = talk => {
     .replace("${speakers}", talk.speakers);
 
   if (title.length + talk.title.length <= TITLE_NB_CHARACTERS_MAX) {
-    title = title.replace("${title}", escapeHtml(talk.title));
+    title = title.replace("${title}", talk.title);
   } else {
     const remainingCharacters = TITLE_NB_CHARACTERS_MAX - title.length;
     title = title.replace(
@@ -497,7 +497,7 @@ const generateMetadata = talk => {
 
   return {
     snippet: {
-      title,
+      title: escapeHtml(title),
       description,
       categoryId: youtubeConfig.categoryId
     },

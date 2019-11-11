@@ -1,10 +1,4 @@
-const escapeHtml = s =>
-  s
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
+const escapeHtml = s => s.replace(/([&<>"'])/g, "$1");
 
 const capitalize = name =>
   name.toLowerCase().replace(/(?:^|\s|-)\S/g, c => c.toUpperCase());
