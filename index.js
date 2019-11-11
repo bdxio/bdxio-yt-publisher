@@ -462,7 +462,8 @@ const fetchTalkInfos = async talk => {
     .map(findSpeaker)
     .map(speaker => speaker.displayName)
     .map(capitalize)
-    .join(" et ");
+    .join(', ')
+    .replace(/, ([^,]*)$/, " et $1");
 
   return { ...talk, title, speakers, description };
 };
