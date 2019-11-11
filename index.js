@@ -15,7 +15,7 @@ const _ = require("lodash");
 const fetch = require("node-fetch");
 const prettyBytes = require("pretty-bytes");
 
-const { escapeHtml, capitalize } = require("./strings");
+const { escapeHtml, capitalize, formatMarkdown } = require("./strings");
 
 /**
  * The downloaded streams and splitted videos to upload are stored in the videos folder.
@@ -498,7 +498,7 @@ const generateMetadata = talk => {
   return {
     snippet: {
       title: escapeHtml(title),
-      description,
+      description: formatMarkdown(description),
       categoryId: youtubeConfig.categoryId
     },
     status: {
