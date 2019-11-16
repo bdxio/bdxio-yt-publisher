@@ -179,22 +179,23 @@ main()
 /**
  * Map a talk from a CSV line to an object.
  * The expected fields are :
- *   - room (column 0/A)
- *   - id (column 2/C)
- *   - title (column 3/D)
+ *   - room (column 3/D)
+ *   - id (column 6/G)
+ *   - title (column 0/A)
  *   - start offset (column 4/E)
- *   - end offset (column 7/H)
- *   - stream url (column 10/K)
+ *   - end offset (column 5/F)
+ *   - stream url (column 7/H)
+ *   - speakers (column 1/B)
  * @param {Array} talk a CVS line, splitted into an array, containing all CSV fields for a talk
  */
 const parseCsvTalk = talk => ({
-  room: talk[0],
-  id: talk[2],
-  title: talk[3],
+  room: talk[3],
+  id: talk[6],
+  title: talk[0],
   start: parseTime(talk[4]),
-  end: parseTime(talk[7]),
-  streamUrl: parseStreamUrl(talk[10]),
-  speakers: talk[12]
+  end: parseTime(talk[5]),
+  streamUrl: parseStreamUrl(talk[7]),
+  speakers: talk[1]
 });
 
 /**
