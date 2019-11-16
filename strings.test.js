@@ -14,3 +14,9 @@ test("should capitalize speaker name", () => {
   expect(strings.capitalize("jOHn DOe")).toBe("John Doe");
   expect(strings.capitalize("Jane-john doe")).toBe("Jane-John Doe");
 });
+
+test("should join speakers name", () => {
+  expect(strings.replaceLastComma("john doe", " et ")).toBe("john doe");
+  expect(strings.replaceLastComma("john, doe", " et ")).toBe("john et doe");
+  expect(strings.replaceLastComma("john, mary, doe", " and ")).toBe("john, mary and doe");
+});

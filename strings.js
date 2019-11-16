@@ -9,7 +9,11 @@ const escapeHtml = s =>
 const capitalize = name =>
   name.toLowerCase().replace(/(?:^|\s|-)\S/g, c => c.toUpperCase());
 
+const replaceLastComma = (str, replacement) => 
+  str.replace(/, ([^,]*)$/, replacement + '$1');
+
 module.exports = {
   escapeHtml,
-  capitalize
+  capitalize,
+  replaceLastComma
 };
