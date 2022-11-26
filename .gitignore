@@ -1,3 +1,4 @@
+.idea/
 assets/*
 !assets/README.md
 config/dev.json

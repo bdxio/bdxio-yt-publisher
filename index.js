@@ -2,10 +2,9 @@ const fs = require("fs");
 const http = require("http");
 const querystring = require("querystring");
 const url = require("url");
-const util = require("util");
 const { execSync } = require("child_process");
 const config = require("config");
-const parse = util.promisify(require("csv-parse"));
+const parse = require("csv-parse/sync");
 const moment = require("moment");
 const { google } = require("googleapis");
 const youtube = google.youtube("v3");
@@ -128,8 +127,8 @@ const youtubeConfig = config.has("youtube")
   ? { ...YOUTUBE_DEFAULT_CONFIG, ...config.get("youtube") }
   : YOUTUBE_DEFAULT_CONFIG;
 
-// Arguments passed to youtube-dl.
-const youtubeDlArgs = fs.readFileSync("youtube-dl.args", "UTF-8");
+// Arguments passed to yt-dlp.
+const ytdlpArgs = fs.readFileSync("yt-dlp.args", "UTF-8");
 
 // Arguments passed to ffmpeg.
 const ffmpegArgsTemplate = fs.readFileSync("ffmpeg.args", "UTF-8");
@@ -160,8 +159,8 @@ let cfpData;
 const main = async () => {
   try {
     const file = fs.readFileSync(csvPath);
-    const data = await parse(file);
-    const talks = data.map(parseCsvTalk).filter(isTalkValid);
+    const records = parse.parse(file, { fromLine: 2 }); // skip the CSV header
+    const talks = records.map(parseCsvTalk).filter(isTalkValid);
 
     mkdir(VIDEOS_PATH);
 
@@ -218,35 +217,25 @@ const main = async () => {
 };
 
 /**
- * Run the main function 🤞
- */
-main()
-  .then(() => {
-    console.log("All done 🎉");
-  })
-  .catch(err => {
-    console.error(err);
-  });
-
-/**
  * Map a talk from a CSV line to an object.
  * The expected fields are :
- *   - room (column 0/A)
- *   - id (column 2/C)
- *   - title (column 3/D)
+ *   - title (column 0/A)
+ *   - speakers (column 1/B)
+ *   - room (column 3/D)
  *   - start offset (column 4/E)
- *   - end offset (column 7/H)
+ *   - end offset (column 5/F)
+ *   - id (column 6/G)
  *   - stream url (column 10/K)
- * @param {Array} talk a CVS line, splitted into an array, containing all CSV fields for a talk
+ * @param {Array} talk a CVS line, split into an array, containing all CSV fields for a talk
  */
 const parseCsvTalk = talk => ({
-  room: talk[0],
-  id: talk[2],
-  title: talk[3],
+  title: talk[0],
+  speakers: talk[1],
+  room: talk[3],
   start: parseTime(talk[4]),
-  end: parseTime(talk[7]),
-  streamUrl: parseStreamUrl(talk[10]),
-  speakers: talk[12]
+  end: parseTime(talk[5]),
+  id: talk[6],
+  streamUrl: parseStreamUrl(talk[7])
 });
 
 /**
@@ -256,7 +245,7 @@ const parseCsvTalk = talk => ({
 const parseTime = time => moment(time, "h[h]mm[m]ss[s]");
 
 /**
- * Parse an URL for a stream, removing trailing parameters for the URL.
+ * Parse a URL for a stream, removing trailing parameters for the URL.
  * @param {String} url The URL to parse.
  */
 const parseStreamUrl = url => url.replace(/&t=[0-9]h[0-9]{2}m[0-9]{2}s/, "");
@@ -267,15 +256,36 @@ const parseStreamUrl = url => url.replace(/&t=[0-9]h[0-9]{2}m[0-9]{2}s/, "");
  */
 const isTalkValid = talk => {
   // Check if the talk has all the required fields.
-  if (!talk.room || talk.room === "") return false;
-  if (!talk.id || talk.id === "") return false;
-  if (!talk.title || talk.title === "") return false;
-  if (!talk.start || talk.start === "" || talk.start === "???") return false;
-  if (!talk.end || talk.end === "" || talk.end === "???") return false;
-  if (!talk.streamUrl || talk.url === "") return false;
+  if (!talk.title || talk.title === "") {
+    console.log(`talk ${talk.id} has no title set.`);
+    return false;
+  }
+  if (!talk.room || talk.room === "") {
+    console.log(`talk ${talk.title} has no room set.`);
+    return false;
+  }
+  if (!talk.start || talk.start === "" || talk.start === "???") {
+    console.log(`talk ${talk.title} has no start time set.`);
+    return false;
+  }
+  if (!talk.end || talk.end === "" || talk.end === "???") {
+    console.log(`talk ${talk.title} has no end time set.`);
+    return false;
+  }
+  if (!talk.id || talk.id === "") {
+    console.log(`talk ${talk.title} has no id set.`);
+    return false;
+  }
+  if (!talk.streamUrl || talk.url === "") {
+    console.log(`talk ${talk.title} has no start time set.`);
+    return false;
+  }
 
   // Exclude talks if the configuration don't include its room.
   if (config.has("rooms") && !config.get("rooms").includes(talk.room)) {
+    console.log(
+      `talk ${talk.title} has room "${talk.room}" which doesn't match configured rooms.`
+    );
     return false;
   }
 
@@ -345,22 +355,21 @@ const splitRoom = (talks, roomName) => {
 };
 
 /**
- * Download a stream for a room (using youtube-dl).
+ * Download a stream for a room (using yt-dlp).
  * @param {String} roomName The room name.
  * @param {String} url The URL of the stream for the room.
  */
 const downloadStream = (roomName, url, directory) => {
   const video = `${directory}/${roomName}.${downloadExt}`;
   if (download) {
-    console.log(`Downloading ${url} to ${video}...`);
+    const cmd = `yt-dlp --output "${directory}/${roomName}.%(ext)s" ${ytdlpArgs} ${url}`;
+    console.log(`Downloading ${url} to ${video} with command "${cmd}"`);
     /**
-     * If using MKV format youtube-dl has to download two streams and merge them after.
-     * We need to let youtube-dl figure out the file extension (using ext template) and praise that
-     * the user set the download extension accordingly to his youtube-dl arguments.
+     * If using MKV format yt-dlp has to download two streams and merge them after.
+     * We need to let yt-dlp figure out the file extension (using ext template) and praise that
+     * the user set the download extension accordingly to his yt-dlp arguments.
      */
-    execSync(
-      `youtube-dl --output "${directory}/${roomName}.%(ext)s" ${youtubeDlArgs} ${url}`
-    );
+    execSync(cmd);
   }
 
   return video;
@@ -462,7 +471,7 @@ const fetchTalkInfos = async talk => {
     .map(findSpeaker)
     .map(speaker => speaker.displayName)
     .map(capitalize)
-    .join(', ')
+    .join(", ")
     .replace(/, ([^,]*)$/, " et $1");
 
   return { ...talk, title, speakers, description };
@@ -623,3 +632,14 @@ const addVideoToPlaylist = async (videoId, playlistId, position) => {
     }
   });
 };
+
+/**
+ * Run the main function 🤞
+ */
+main()
+  .then(() => {
+    console.log("All done 🎉");
+  })
+  .catch(err => {
+    console.error(err);
+  });

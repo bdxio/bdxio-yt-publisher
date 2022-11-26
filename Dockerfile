@@ -1,4 +1,4 @@
-FROM node:12 AS build
+FROM node:16 AS build
 
 WORKDIR /app
 
@@ -7,16 +7,16 @@ RUN npm install
 
 COPY . /app
 
-FROM jrottenberg/ffmpeg:4.2-ubuntu
+FROM jrottenberg/ffmpeg:5.1-ubuntu
 
 RUN apt-get update \
     && apt-get install -y curl
 
-RUN curl -sL https://deb.nodesource.com/setup_12.x | bash - \
+RUN curl -fsSL https://deb.nodesource.com/setup_16.x | bash - \
     && apt-get install -y nodejs
 
-RUN curl -sL https://yt-dl.org/latest/youtube-dl -o /usr/local/bin/youtube-dl \
-    && chmod a+x /usr/local/bin/youtube-dl
+RUN curl -fsSL https://github.com/yt-dlp/yt-dlp/releases/download/2022.11.11/yt-dlp -o /usr/local/bin/yt-dlp \
+    && chmod a+rx /usr/local/bin/yt-dlp
 
 VOLUME ["/app/assets", "/app/config", "/app/videos"]
 

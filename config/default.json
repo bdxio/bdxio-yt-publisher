@@ -1,6 +1,6 @@
 {
     "csv": "talks.csv",
-    "rooms": ["GdAmphi"],
+    "rooms": ["Amphi A", "Amphi B", "Amphi C", "Salle 1", "Salle 2"],
     "cfpUrl": "https://conference-hall.io/api/v1/event",
     "cfpEventId": "TODO",
     "cfpApiKey": "TODO",

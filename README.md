@@ -69,43 +69,43 @@ An issue has been created to solve this by configuration.
 
 If you plan to use Docker just run `./build.sh` to build the image.
 
-Otherwise you'll need two runtime requirements :
+Otherwise, you'll need two runtime requirements :
 
-  1. [youtube-dl](https://rg3.github.io/youtube-dl/), used to download rooms streams
-  2. [ffpmeg](https://ffmpeg.org/) v3.4+, used to extract talks from streams
+  1. [yt-dlp](https://github.com/yt-dlp/yt-dlp), used to download rooms streams
+  2. [ffpmeg](https://ffmpeg.org/) v5.1+, used to extract talks from streams
 
 Then you can install dependencies using `npm install` or `yarn`.
 
 ## Usage
 
 To upload videos you'll need to retrieve `client_id` and `client_secret` of the application to authorize access to your YouTube account.  
-Go to the [Google developers console](https://console.developers.google.com/), select the application `bdxio-yt-publisher` and select `Identifiants`.  
+Go to the [Google developers console](https://console.developers.google.com/), select the application `bdxio-yt-publisher` and select `API > Identifiants`.  
 Then select `Node.js` as OAuth 2.0 client and copy/paste the `client_id` and `client_secret` into `config/default.json`.  
 If you need to create a new application don't forget to enable the "YouTube Data API v3" API for it.
 
-The second step is to export the CSV file containing all the talks informations:
+The second step is to export the CSV file containing all the talks information:
   
-  1. Go to the Google Drive account and open the spreadsheet `Talks <YEAR>` located in the folder `6- CFP - Speakers`
-  2. Export the sheet named `Vidéos`
-  3. Paste the CSV file at the root of the projet, it should be named `talks.csv`
+  1. Go to the Google Drive account and open the spreadsheet `Talks` located in the folder `5 - Media & Com > Captation vidéo`
+  2. Export the sheet for each room as CSV
+  3. Paste the CSV files at the root of the project and rename the room you want to handle as `talks.csv`
 
 Check that this sheet contains:
-
-  - room in column `A`
-  - id in column `C`
-  - title in column `D`
-  - start and end offsets in columns `E` and `H`
-  - video url in column `K`
+  - title in column `A`
+  - speakers in column `B`
+  - room in column `D`
+  - start and end offsets in columns `E` and `F`
+  - cfp id in column `G`
+  - video url in column `H`
 
 _invalid rows will be filtered out_
 
-Put the intro and outro files to be added to each video into the [assets](./assets) directory.
+Put the intro and outro files to be added to each video in the [assets](./assets) directory.
 
-Finally create a configuration file called `production.json` in the `config` directory, using `default.json` as template (see `Configuration` section below for more information).
+Finally, create a configuration file called `production.json` in the `config` directory, using `default.json` as template (see `Configuration` section below for more information).
 
 You can use Docker to run the application, using `run.sh` script.
 
-_Notice that you'll need to manually copy paste the OAuth authorization URL to give access to your YouTube account_
+_Notice that you'll need to manually copy and paste the OAuth authorization URL to give access to your YouTube account_
 
 You can also run the application locally, using `NODE_ENV=production yarn start` to start the processing.  
 Upon start the application should ask for access to your Google account, make sure that you select the account which should publish the videos, not your personal Google account (unless you want to make some tests).
@@ -201,7 +201,7 @@ If you're running the application on your computer you might want to customize t
 available hardware acceleration (this won't work if you're using a Docker container).  
 For example on macOS you may replace `libx264` by `h264_videotoolbox` to use [VideoToolbox](https://developer.apple.com/documentation/videotoolbox).
 
-By default the following arguments are used:
+By default, the following arguments are used:
 ```bash
 -y -i "${intro}" -ss ${start} -to ${end} -i "${stream}" -loop 1 -t 7 -framerate 25 -i "${outro}" -t 7 -f lavfi -i anullsrc=r=44100:cl=stereo \
   -filter_complex "[0:v] fade=in:0:25, fade=out:250:25 [faded-intro]; \
@@ -212,7 +212,7 @@ By default the following arguments are used:
   -map "[v]" -map "[a]" -c:v libx264 -crf 17 -c:a aac -b:a 192k "${output}"
 ```
 
-Basically this add an intro and an outro (from an image), extract the talk from the stream, add some fade in and fade out effects and outputs to a single file.
+Basically this adds an intro and an outro (from an image), extract the talk from the stream, add some fade in and fade out effects and outputs to a single file.
 
 The application will replace the variables by their values when executing the command :
   - `${intro}` is the path to the intro file
