@@ -418,10 +418,9 @@ const downloadCfpData = async () => {
  * @param {Object} talk The talk to upload.
  */
 const uploadTalk = async talk => {
-  const talkWithInfos = await fetchTalkInfos(talk);
-  const metadata = generateMetadata(talkWithInfos);
-  const video = await uploadToYouTube(talk, metadata);
-  return video;
+  const talkWithCFPInformation = await fetchTalkCFPInformation(talk);
+  const metadata = generateMetadata(talkWithCFPInformation);
+  return await uploadToYouTube(talk, metadata);
 };
 
 /**
@@ -455,11 +454,11 @@ const uploadToYouTube = async (talk, metadata) => {
 };
 
 /**
- * Fetch additional informations for a given talk.
+ * Fetch information (title and description) for a given talk from CFP.
  * @param {Object} talk The talk.
  */
-const fetchTalkInfos = async talk => {
-  console.log(`Fetching infos for talk ${talk.id}...`);
+const fetchTalkCFPInformation = async talk => {
+  console.log(`Fetching CFP information for talk ${talk.id}...`);
   const cfpTalk = cfpData.talks.find(t => t.id === talk.id);
   // Some talks don't have data on the CFP (keynotes for example)
   if (cfpTalk === undefined) {
@@ -467,21 +466,8 @@ const fetchTalkInfos = async talk => {
   }
 
   const { title, abstract: description } = cfpTalk;
-  const speakers = cfpTalk.speakers
-    .map(findSpeaker)
-    .map(speaker => speaker.displayName)
-    .map(capitalize)
-    .join(", ")
-    .replace(/, ([^,]*)$/, " et $1");
 
-  return { ...talk, title, speakers, description };
-};
-
-const findSpeaker = uid => {
-  const speaker = cfpData.speakers.find(s => s.uid === uid);
-  if (speaker === undefined) throw Error(`speaker with uid ${uid} not found`);
-
-  return speaker;
+  return { ...talk, title, description };
 };
 
 /**
@@ -590,8 +576,8 @@ const getVideosFromPlaylist = async (playlistId, pageToken = "") => {
  */
 const tagTalk = async (talk, videoId, playlistId, position) => {
   console.log(`Tagging talk ${talk.title}...`);
-  const talkWithInfos = await fetchTalkInfos(talk);
-  const metadata = generateMetadata(talkWithInfos);
+  const talkWithCFPInformation = await fetchTalkCFPInformation(talk);
+  const metadata = generateMetadata(talkWithCFPInformation);
   await updateVideo(videoId, metadata);
   await addVideoToPlaylist(videoId, playlistId, position);
 };
