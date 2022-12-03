@@ -1,7 +1,9 @@
--y -i "${intro}" -ss ${start} -to ${end} -i "${stream}" -loop 1 -t 7 -framerate 25 -i "${outro}" -t 7 -f lavfi -i anullsrc=r=44100:cl=stereo \
-  -filter_complex "[0:v] fade=in:0:25, fade=out:250:25 [faded-intro]; \
+-y -i "${intro}" -ss ${start} -to ${end} -i "${stream}" -loop 1 -t 7 -framerate 30 -i "${outro}" -t 7 -f lavfi -i anullsrc=r=48000:cl=stereo \
+  -filter_complex "[0:v] fade=in:0:25, fade=out:250:25, fps=30 [faded-intro-video]; \
+  [0:a] volume=0.2 [intro-audio]; \
   [1:v] fade=in:0:25, fade=out:st=${fadeOutStartTime}:d=1 [faded-talk-video]; \
-  [1:a] afade=t=in:ss=0:d=1, afade=t=out:st=${fadeOutStartTime}:d=1 [faded-talk-audio]; \
+  [1:a] [1:a] amerge=inputs=2 [talk-audio]; \
+  [talk-audio] afade=t=in:ss=0:d=1, afade=t=out:st=${fadeOutStartTime}:d=1 [faded-talk-audio]; \
   [2:v] fade=in:0:25, fade=out:150:25 [faded-outro]; \
-  [faded-intro] [0:a] [faded-talk-video] [faded-talk-audio] [faded-outro] [3:a] concat=n=3:v=1:a=1 [v] [a]" \
+  [faded-intro-video] [intro-audio] [faded-talk-video] [faded-talk-audio] [faded-outro] [3:a] concat=n=3:v=1:a=1 [v] [a]" \
   -map "[v]" -map "[a]" -c:v libx264 -crf 17 -c:a aac -b:a 192k "${output}"
