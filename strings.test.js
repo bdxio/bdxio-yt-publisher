@@ -26,4 +26,11 @@ test("should convert markdown format", () => {
   expect(strings.formatMarkdown("Some _**italic and bold**_ text here")).toBe(
     "Some _*italic and bold*_ text here"
   );
+  expect(
+    strings.formatMarkdown("Newline after.<br>Another new line after.</br>")
+  ).toBe("Newline after.\\nAnother new line after.\\n");
+  expect(strings.formatMarkdown("<b>some bold text</b>")).toBe(
+    "*some bold text*"
+  );
+  expect(strings.formatMarkdown("<MyComponent/>")).toBe("&lt;MyComponent&gt;");
 });

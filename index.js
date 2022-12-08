@@ -489,12 +489,10 @@ const generateMetadata = talk => {
     );
   }
 
-  const { description } = talk;
-
   return {
     snippet: {
       title: escapeHtml(title),
-      description: formatMarkdown(description),
+      description: formatDescription(talk.description),
       categoryId: youtubeConfig.categoryId
     },
     status: {
@@ -503,6 +501,18 @@ const generateMetadata = talk => {
       privacyStatus: youtubeConfig.privacyStatus
     }
   };
+};
+
+const formatDescription = desc => {
+  if (desc == null || desc === "") {
+    return desc;
+  }
+
+  const markdown = formatMarkdown(desc);
+  if (markdown.length < 1_000) {
+    return markdown;
+  }
+  return markdown.substring(0, 999) + "…";
 };
 
 /**
