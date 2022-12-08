@@ -498,6 +498,7 @@ const generateMetadata = talk => {
       categoryId: youtubeConfig.categoryId
     },
     status: {
+      embeddable: true,
       license: youtubeConfig.license,
       privacyStatus: youtubeConfig.privacyStatus
     }
