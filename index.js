@@ -130,8 +130,11 @@ const youtubeConfig = config.has("youtube")
 // Arguments passed to yt-dlp.
 const ytdlpArgs = fs.readFileSync("yt-dlp.args", "UTF-8");
 
+// Path to ffmpeg args.
+const ffmpegArgs = getConfigValue("ffmpegArgs", "ffmpeg.args");
+
 // Arguments passed to ffmpeg.
-const ffmpegArgsTemplate = fs.readFileSync("ffmpeg.args", "UTF-8");
+const ffmpegArgsTemplate = fs.readFileSync(ffmpegArgs, "UTF-8");
 
 // Indicates whether or not tag in YouTube manually uploaded videos.
 const tag = getConfigValue("tag", false);
