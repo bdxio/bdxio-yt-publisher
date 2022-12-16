@@ -524,6 +524,13 @@ const formatDescription = desc => {
  */
 const createPlaylist = async () => {
   const title = playlistTitleTemplate.replace("${year}", conferenceYear);
+
+  const playlists = await getPlaylists();
+  const playlist = playlists.find(pl => pl.snippet.title === title);
+  if (playlist !== undefined) {
+    return playlist;
+  }
+
   const response = await youtube.playlists.insert({
     part: "snippet, status",
     resource: {
@@ -538,6 +545,26 @@ const createPlaylist = async () => {
   });
 
   return response.data;
+};
+
+/**
+ * Get all the videos from a given playlist.
+ * @param {String} pageToken The token for the results page to fetch.
+ */
+const getPlaylists = async (pageToken = "") => {
+  const response = await youtube.playlists.list({
+    part: ["id", "snippet"],
+    mine: true,
+    maxResults: 50,
+    pageToken
+  });
+
+  if (response.data.nextPageToken) {
+    const nextItems = await getPlaylists(response.data.nextPageToken);
+    return [...response.data.items, ...nextItems];
+  }
+
+  return response.data.items;
 };
 
 /**
