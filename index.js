@@ -17,7 +17,7 @@ const prettyBytes = require("pretty-bytes");
 const { escapeHtml, capitalize, formatMarkdown } = require("./strings");
 
 /**
- * The downloaded streams and splitted videos to upload are stored in the videos folder.
+ * The downloaded streams and split videos to upload are stored in the videos folder.
  */
 const VIDEOS_PATH = `${__dirname}/videos`;
 
@@ -153,7 +153,7 @@ if (upload && tag) {
   return;
 }
 
-// If upload is enabled data from the CFP will be loaded once in this variable.
+// If upload or tag is enabled data from the CFP will be loaded once in this variable.
 let cfpData;
 
 /**
@@ -177,14 +177,14 @@ const main = async () => {
 
     for (const roomName of roomNames) {
       const roomTalks = talksByRoom[roomName];
-      const splittedVideos = splitRoom(roomTalks, roomName);
+      const splitVideos = splitRoom(roomTalks, roomName);
 
       if (upload || tag) {
         cfpData = await downloadCfpData();
       }
 
       if (upload) {
-        for (const video of splittedVideos) {
+        for (const video of splitVideos) {
           await uploadTalk(video);
         }
       }
@@ -193,7 +193,7 @@ const main = async () => {
         const uploadedVideos = await getUploadedVideos();
         const playlist = await createPlaylist();
         let position = 0;
-        for (const video of splittedVideos) {
+        for (const video of splitVideos) {
           // When manually uploading videos to YouTube special characters contained in the filename are
           // replaced by the blank character.
           const youtubeId = video.id.replace(/[-_]/g, " ");
