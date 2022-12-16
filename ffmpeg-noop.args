@@ -1,2 +1,3 @@
--y -ss ${start} -to ${end} -i "${stream}" \
-  -vcodec copy -acodec copy "${output}"
+-y \
+    -ss ${start} -to ${end} -i "${stream}" \
+    -vcodec copy -acodec copy "${output}"

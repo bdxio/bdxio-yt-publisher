@@ -1,0 +1,32 @@
+-y \
+    -i "${intro}" \
+    -ss ${start} -to ${end} -i "${stream}" \
+    -loop 1 -t 7 -framerate 30 -i "${outro}" \
+    -t 7 -f lavfi -i anullsrc=r=48000:cl=stereo \
+    -i assets/titre-droit.png \
+    -i assets/titre-camera.png \
+    -filter_complex "[0:v] fade=in:0:25, fade=out:250:25, fps=30 [faded-intro-video]; \
+        [0:a] volume=0.2 [intro-audio]; \
+        [1:v][5] overlay=0:0:enable='between(n,0,820)' [tmp1]; \
+        [tmp1][4] overlay=0:0:enable='between(n,820,9271)' [tmp2]; \
+        [tmp2][4] overlay=0:0:enable='between(n,10178,22064)' [tmp3]; \
+        [tmp3][4] overlay=0:0:enable='between(n,23966,24965)' [tmp4]; \
+        [tmp4][4] overlay=0:0:enable='between(n,28103,28314)' [tmp5]; \
+        [tmp5][4] overlay=0:0:enable='between(n,28592,28770)' [tmp6]; \
+        [tmp6][4] overlay=0:0:enable='between(n,30533,30821)' [tmp7]; \
+        [tmp7][4] overlay=0:0:enable='between(n,32778,35430)' [tmp8]; \
+        [tmp8][5] overlay=0:0:enable='between(n,35430,35612)' [tmp9]; \
+        [tmp9][4] overlay=0:0:enable='between(n,35612,41771)' [tmp10]; \
+        [tmp10][4] overlay=0:0:enable='between(n,43235,45648)' [tmp11]; \
+        [tmp11][4] overlay=0:0:enable='between(n,47213,48894)' [tmp12]; \
+        [tmp12][5] overlay=0:0:enable='between(n,48894,49284)' [tmp13]; \
+        [tmp13][4] overlay=0:0:enable='between(n,49284,62210)' [tmp14]; \
+        [tmp14][5] overlay=0:0:enable='between(n,62210,62462)' [tmp15]; \
+        [tmp15][4] overlay=0:0:enable='between(n,62462,62775)' [tmp16]; \
+        [tmp16][5] overlay=0:0:enable='between(n,62775,66900)' [tmp17]; \
+        [1:a] [1:a] amerge=inputs=2 [talk-audio]; \
+        [tmp17] fade=in:0:25, fade=out:st=${fadeOutStartTime}:d=1 [faded-talk-video]; \
+        [talk-audio] afade=t=in:ss=0:d=1, afade=t=out:st=${fadeOutStartTime}:d=1 [faded-talk-audio]; \
+        [2:v] fade=in:0:25, fade=out:150:25 [faded-outro]; \
+        [faded-intro-video][intro-audio][faded-talk-video][faded-talk-audio][faded-outro][3:a] concat=n=3:v=1:a=1 [v][a]" \
+    -map "[v]" -map "[a]" -c:v libx264 -crf 17 -c:a aac -b:a 192k "${output}"
