@@ -151,6 +151,8 @@ Here is the list of the existing configuration parameters :
     "downloadExt": "mkv",
     // Extract talks from stream video file if set to true.
     "extract": true/false,
+    // Path to file containing the arguments used by ffmpeg to split the videos from the original live stream.
+    "ffmpegArgs": <FFMPEG_ARGS_PATH>
     // Path to the file to use for the intro (relative to the current directory).
     // You can choose to remove it but in this case don't forget to edit accordingly the ffmpeg command (see below).
     "intro": "<INTRO_PATH>",
