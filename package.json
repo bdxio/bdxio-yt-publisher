@@ -13,7 +13,7 @@
     "config": "^3.2.4",
     "csv-parse": "^5.3.2",
     "googleapis": "^44.0.0",
-    "lodash": "^4.17.15",
+    "lodash": "^4.17.21",
     "moment": "^2.24.0",
     "node-fetch": "^2.6.0",
     "open": "^7.0.0",
