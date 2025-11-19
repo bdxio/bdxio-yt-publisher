@@ -365,7 +365,7 @@ const splitRoom = (talks, roomName) => {
 const downloadStream = (roomName, url, directory) => {
   const video = `${directory}/${roomName}.${downloadExt}`;
   if (download) {
-    const cmd = `yt-dlp --output "${directory}/${roomName}.%(ext)s" ${ytdlpArgs} ${url}`;
+    const cmd = `yt-dlp -t mkv --output "${directory}/${roomName}.%(ext)s" ${ytdlpArgs} ${url}`;
     console.log(`Downloading ${url} to ${video} with command "${cmd}"`);
     /**
      * If using MKV format yt-dlp has to download two streams and merge them after.

@@ -7,7 +7,7 @@ RUN npm install
 
 COPY . /app
 
-FROM jrottenberg/ffmpeg:5.1-ubuntu
+FROM linuxserver/ffmpeg:arm64v8-7.0.2-cli-ls158
 
 RUN apt-get update \
     && apt-get install -y curl
@@ -15,7 +15,7 @@ RUN apt-get update \
 RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
     && apt-get install -y nodejs
 
-RUN curl -fsSL https://github.com/yt-dlp/yt-dlp/releases/download/2022.11.11/yt-dlp -o /usr/local/bin/yt-dlp \
+RUN curl -fsSL https://github.com/yt-dlp/yt-dlp/releases/download/2025.11.12/yt-dlp -o /usr/local/bin/yt-dlp \
     && chmod a+rx /usr/local/bin/yt-dlp
 
 VOLUME ["/app/assets", "/app/config", "/app/videos"]
