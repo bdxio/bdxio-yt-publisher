@@ -10,7 +10,7 @@
     "url": "https://github.com/bdxio/bdxio-yt-publisher"
   },
   "dependencies": {
-    "config": "^3.2.4",
+    "config": "^3.3.8",
     "csv-parse": "^5.3.2",
     "googleapis": "^44.0.0",
     "lodash": "^4.17.15",
