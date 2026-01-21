@@ -14,7 +14,7 @@
     "csv-parse": "^5.3.2",
     "googleapis": "^44.0.0",
     "lodash": "^4.17.15",
-    "moment": "^2.24.0",
+    "moment": "^2.29.4",
     "node-fetch": "^2.6.0",
     "open": "^7.0.0",
     "pretty-bytes": "^5.3.0",
